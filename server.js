@@ -65,16 +65,26 @@ if (usePostgres) {
 } else {
   try {
     const Database = require('better-sqlite3');
-    const dataDir = path.join(__dirname, 'data');
-    if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir, { recursive: true });
-    sqliteDb = new Database(path.join(dataDir, 'attendance.db'));
+    let dbPath;
+    try {
+      const dataDir = path.join(__dirname, 'data');
+      if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir, { recursive: true });
+      dbPath = path.join(dataDir, 'attendance.db');
+      sqliteDb = new Database(dbPath);
+    } catch (fsErr) {
+      // Fallback for read-only serverless filesystems (e.g. Vercel, AWS Lambda)
+      const tmpDir = os.tmpdir();
+      dbPath = path.join(tmpDir, 'attendance.db');
+      sqliteDb = new Database(dbPath);
+    }
     sqliteDb.pragma('journal_mode = WAL');
     sqliteDb.pragma('foreign_keys = ON');
-    console.log('📁 SQLite mode enabled -> data/attendance.db');
+    console.log(`📁 SQLite mode enabled -> ${dbPath}`);
   } catch (err) {
-    console.warn('⚠️ SQLite driver (better-sqlite3) not loaded. Please set USE_POSTGRES=true for PostgreSQL mode.');
+    console.warn('⚠️ SQLite driver (better-sqlite3) failed to load:', err.message);
   }
 }
+
 
 // Universal Async Query Helper
 async function query(sql, params = []) {
