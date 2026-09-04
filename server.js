@@ -670,13 +670,17 @@ app.get('/api/departments', auth, async (req, res) => {
 app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
 
 // ─── Start Server ────────────────────────────────────────────────
-app.listen(PORT, '0.0.0.0', () => {
-  const localIp = getLocalIp();
-  console.log(`\n  ╔══════════════════════════════════════════════════╗`);
-  console.log(`  ║   🎯 QR Attendance System v1.0                   ║`);
-  console.log(`  ║   💻 Local:   http://localhost:${PORT}               ║`);
-  console.log(`  ║   📱 Mobile:  http://${localIp}:${PORT}`.padEnd(53) + `║`);
-  console.log(`  ║   🗄️ Database: ${dbDriver.toUpperCase()}`.padEnd(53) + `║`);
-  console.log(`  ║   👤 Admin: admin / admin123                      ║`);
-  console.log(`  ╚══════════════════════════════════════════════════╝\n`);
-});
+if (require.main === module) {
+  app.listen(PORT, '0.0.0.0', () => {
+    const localIp = getLocalIp();
+    console.log(`\n  ╔══════════════════════════════════════════════════╗`);
+    console.log(`  ║   🎯 QR Attendance System v1.0                   ║`);
+    console.log(`  ║   💻 Local:   http://localhost:${PORT}               ║`);
+    console.log(`  ║   📱 Mobile:  http://${localIp}:${PORT}`.padEnd(53) + `║`);
+    console.log(`  ║   🗄️ Database: ${dbDriver.toUpperCase()}`.padEnd(53) + `║`);
+    console.log(`  ║   👤 Admin: admin / admin123                      ║`);
+    console.log(`  ╚══════════════════════════════════════════════════╝\n`);
+  });
+}
+
+module.exports = app;
