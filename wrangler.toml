@@ -2,7 +2,3 @@ name = "qr-attendance-system"
 pages_build_output_dir = "public"
 compatibility_date = "2026-09-04"
 compatibility_flags = [ "nodejs_compat" ]
-
-[assets]
-directory = "./public"
-
