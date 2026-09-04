@@ -1,0 +1,25 @@
+{
+  "name": "qr-attendance-system",
+  "version": "1.0.0",
+  "description": "QR-Based Attendance System - Fast, Secure, and Efficient",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js",
+    "tunnel": "./bin/cloudflared tunnel --url http://localhost:3000",
+    "prod": "npx pm2 start server.js --name qr-attendance"
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "better-sqlite3": "^9.4.3",
+    "dotenv": "^17.4.2",
+    "express": "^4.18.2",
+    "jsonwebtoken": "^9.0.2",
+    "pg": "^8.23.0",
+    "qrcode": "^1.5.3",
+    "uuid": "^9.0.0"
+  },
+  "devDependencies": {
+    "localtunnel": "^2.0.2"
+  }
+}

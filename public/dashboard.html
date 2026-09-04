@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard — QR Attendance System</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <div class="toast-container" id="toasts"></div>
+  <button class="mobile-toggle" onclick="document.querySelector('.sidebar').classList.toggle('open')">☰</button>
+
+  <div class="app-layout">
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-brand">
+        <div class="brand-icon">📋</div>
+        <div><h2>QR Attendance</h2><small>Management System</small></div>
+      </div>
+      <nav class="sidebar-nav">
+        <button class="nav-item active" onclick="showSection('overview',this)"><span class="nav-icon">📊</span>Overview</button>
+        <button class="nav-item" onclick="showSection('sessions',this)"><span class="nav-icon">📅</span>Sessions</button>
+        <button class="nav-item" onclick="showSection('students',this)"><span class="nav-icon">👥</span>Students</button>
+        <button class="nav-item" onclick="showSection('reports',this)"><span class="nav-icon">📈</span>Reports</button>
+      </nav>
+      <div class="sidebar-footer">
+        <div class="user-info">
+          <div class="user-avatar" id="userAvatar">A</div>
+          <div style="flex:1"><div class="user-name" id="userName">Admin</div><div class="user-role">Administrator</div></div>
+          <button class="btn btn-ghost btn-sm" onclick="logout()" title="Logout">🚪</button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+
+      <!-- OVERVIEW -->
+      <div class="section active" id="sec-overview">
+        <div class="page-header"><div><h1>Dashboard</h1><p>Welcome back! Here's your attendance overview.</p></div></div>
+        <div class="stats-grid" id="statsGrid"></div>
+        <div class="card">
+          <div class="card-header"><h3>📋 Recent Activity</h3></div>
+          <div class="card-body" id="recentActivity"><div class="empty-state"><div class="empty-icon">📭</div><p>No activity yet</p></div></div>
+        </div>
+      </div>
+
+      <!-- SESSIONS -->
+      <div class="section" id="sec-sessions">
+        <div class="page-header">
+          <div><h1>Sessions</h1><p>Create and manage attendance sessions</p></div>
+          <button class="btn btn-primary" onclick="openModal('sessionModal')">➕ New Session</button>
+        </div>
+        <div class="card">
+          <div class="card-body table-wrapper">
+            <table id="sessionsTable">
+              <thead><tr><th>Title</th><th>Status</th><th>Attendees</th><th>Created</th><th>Expires</th><th>Actions</th></tr></thead>
+              <tbody id="sessionsBody"></tbody>
+            </table>
+            <div id="sessionsEmpty" class="empty-state" style="display:none"><div class="empty-icon">📅</div><p>No sessions yet. Create your first session!</p></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- STUDENTS -->
+      <div class="section" id="sec-students">
+        <div class="page-header">
+          <div><h1>Students</h1><p>Manage registered students</p></div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button class="btn btn-outline" onclick="openModal('importModal')">📥 Import CSV</button>
+            <button class="btn btn-primary" onclick="openModal('studentModal');clearStudentForm()">➕ Add Student</button>
+          </div>
+        </div>
+        <div class="filter-bar">
+          <input type="text" class="form-input" id="studentSearch" placeholder="🔍 Search students..." oninput="loadStudents()">
+          <select class="form-input" id="deptFilter" onchange="loadStudents()"><option value="">All Departments</option></select>
+        </div>
+        <div class="card">
+          <div class="card-body table-wrapper">
+            <table><thead><tr><th>Student ID</th><th>Name</th><th>Email</th><th>Department</th><th>Actions</th></tr></thead>
+              <tbody id="studentsBody"></tbody>
+            </table>
+            <div id="studentsEmpty" class="empty-state" style="display:none"><div class="empty-icon">👥</div><p>No students yet. Add students or import a CSV file.</p></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- REPORTS -->
+      <div class="section" id="sec-reports">
+        <div class="page-header">
+          <div><h1>Reports</h1><p>View and export attendance data</p></div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button class="btn btn-outline" onclick="exportCSV()">📥 Export CSV</button>
+            <button class="btn btn-outline" onclick="exportPDF()">📄 Export PDF</button>
+          </div>
+        </div>
+        <div class="filter-bar">
+          <input type="date" class="form-input" id="reportFrom" onchange="loadReports()">
+          <input type="date" class="form-input" id="reportTo" onchange="loadReports()">
+          <select class="form-input" id="reportDept" onchange="loadReports()"><option value="">All Depts</option></select>
+          <select class="form-input" id="reportSession" onchange="loadReports()"><option value="">All Sessions</option></select>
+        </div>
+        <div class="card">
+          <div class="card-body table-wrapper">
+            <table><thead><tr><th>Student ID</th><th>Name</th><th>Department</th><th>Session</th><th>Date & Time</th><th>Status</th></tr></thead>
+              <tbody id="reportsBody"></tbody>
+            </table>
+            <div id="reportsEmpty" class="empty-state" style="display:none"><div class="empty-icon">📈</div><p>No records found matching the filters.</p></div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- SESSION MODAL -->
+  <div class="modal-overlay" id="sessionModal">
+    <div class="modal">
+      <div class="modal-header"><h3>Create Session</h3><button class="modal-close" onclick="closeModal('sessionModal')">✕</button></div>
+      <div class="modal-body">
+        <div class="form-group"><label>Title *</label><input type="text" id="sessTitle" class="form-input" placeholder="e.g. CS101 - Lecture 5"></div>
+        <div class="form-group"><label>Description</label><textarea id="sessDesc" class="form-input" placeholder="Optional description..."></textarea></div>
+        <div class="form-group"><label>Duration (minutes, 0 = no expiry)</label><input type="number" id="sessDuration" class="form-input" value="60" min="0"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="closeModal('sessionModal')">Cancel</button>
+        <button class="btn btn-primary" onclick="createSession()">Create Session</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- QR MODAL -->
+  <div class="modal-overlay" id="qrModal">
+    <div class="modal">
+      <div class="modal-header"><h3>Session QR Code</h3><button class="modal-close" onclick="closeModal('qrModal')">✕</button></div>
+      <div class="modal-body">
+        <div class="qr-display">
+          <img id="qrImage" src="" alt="QR Code">
+          <div class="qr-title" id="qrTitle"></div>
+          <div class="qr-actions">
+            <button class="btn btn-primary btn-sm" onclick="downloadQR()">⬇️ Download PNG</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- STUDENT MODAL -->
+  <div class="modal-overlay" id="studentModal">
+    <div class="modal">
+      <div class="modal-header"><h3 id="studentModalTitle">Add Student</h3><button class="modal-close" onclick="closeModal('studentModal')">✕</button></div>
+      <div class="modal-body">
+        <input type="hidden" id="editStudentId">
+        <div class="form-group"><label>Student ID *</label><input type="text" id="stuId" class="form-input" placeholder="e.g. STU001"></div>
+        <div class="form-group"><label>Full Name *</label><input type="text" id="stuName" class="form-input" placeholder="John Doe"></div>
+        <div class="form-group"><label>Email</label><input type="email" id="stuEmail" class="form-input" placeholder="john@example.com"></div>
+        <div class="form-group"><label>Department</label><input type="text" id="stuDept" class="form-input" placeholder="e.g. Computer Science"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="closeModal('studentModal')">Cancel</button>
+        <button class="btn btn-primary" onclick="saveStudent()">Save Student</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- IMPORT MODAL -->
+  <div class="modal-overlay" id="importModal">
+    <div class="modal">
+      <div class="modal-header"><h3>Import Students (CSV)</h3><button class="modal-close" onclick="closeModal('importModal')">✕</button></div>
+      <div class="modal-body">
+        <div class="alert alert-info">ℹ️ CSV format: <strong>student_id, name, email, department</strong> (one per line, with or without headers)</div>
+        <div class="form-group"><label>Paste CSV or upload file</label><textarea id="csvData" class="form-input" rows="8" placeholder="STU001,John Doe,john@mail.com,CS&#10;STU002,Jane Smith,jane@mail.com,IT"></textarea></div>
+        <div class="form-group"><input type="file" id="csvFile" accept=".csv" class="form-input" onchange="handleCSVFile(event)"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="closeModal('importModal')">Cancel</button>
+        <button class="btn btn-primary" onclick="importCSV()">Import Students</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ATTENDANCE VIEW MODAL -->
+  <div class="modal-overlay" id="attendanceModal">
+    <div class="modal" style="max-width:680px">
+      <div class="modal-header"><h3 id="attModalTitle">Session Attendance</h3><button class="modal-close" onclick="closeModal('attendanceModal')">✕</button></div>
+      <div class="modal-body table-wrapper" id="attModalBody"></div>
+    </div>
+  </div>
+
+  <script src="/js/dashboard.js"></script>
+</body>
+</html>
