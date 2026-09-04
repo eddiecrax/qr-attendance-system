@@ -67,6 +67,7 @@
         <div class="page-header">
           <div><h1>Students</h1><p>Manage registered students</p></div>
           <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button class="btn btn-outline" onclick="exportStudentsCSV()">📊 Export CSV</button>
             <button class="btn btn-outline" onclick="openModal('importModal')">📥 Import CSV</button>
             <button class="btn btn-primary" onclick="openModal('studentModal');clearStudentForm()">➕ Add Student</button>
           </div>
@@ -168,15 +169,21 @@
       <div class="modal-header"><h3>Import Students (CSV)</h3><button class="modal-close" onclick="closeModal('importModal')">✕</button></div>
       <div class="modal-body">
         <div class="alert alert-info">ℹ️ CSV format: <strong>student_id, name, email, department</strong> (one per line, with or without headers)</div>
-        <div class="form-group"><label>Paste CSV or upload file</label><textarea id="csvData" class="form-input" rows="8" placeholder="STU001,John Doe,john@mail.com,CS&#10;STU002,Jane Smith,jane@mail.com,IT"></textarea></div>
+        <div class="form-group" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+          <label style="margin:0">Paste CSV or upload file</label>
+          <button class="btn btn-ghost btn-sm" onclick="downloadSampleCSV()" style="color:var(--accent-light);font-size:12px">📄 Download Sample CSV Template</button>
+        </div>
+        <div class="form-group"><textarea id="csvData" class="form-input" rows="7" placeholder="STU001,John Doe,john@mail.com,CS&#10;STU002,Jane Smith,jane@mail.com,IT"></textarea></div>
         <div class="form-group"><input type="file" id="csvFile" accept=".csv" class="form-input" onchange="handleCSVFile(event)"></div>
       </div>
       <div class="modal-footer">
+        <button class="btn btn-outline" onclick="downloadSampleCSV()">📄 Sample Template</button>
         <button class="btn btn-outline" onclick="closeModal('importModal')">Cancel</button>
         <button class="btn btn-primary" onclick="importCSV()">Import Students</button>
       </div>
     </div>
   </div>
+
 
   <!-- ATTENDANCE VIEW MODAL -->
   <div class="modal-overlay" id="attendanceModal">

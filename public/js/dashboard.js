@@ -330,7 +330,6 @@ async function deleteStudent(id) {
   try { await api(`/api/students/${id}`, { method: 'DELETE' }); loadStudents(); toast('Student deleted'); } catch (err) { toast(err.message, 'error'); }
 }
 
-// ─── CSV Import ──────────────────────────────────────────────────
 function handleCSVFile(e) {
   const file = e.target.files[0];
   if (!file) return;
@@ -339,7 +338,33 @@ function handleCSVFile(e) {
   reader.readAsText(file);
 }
 
+function downloadSampleCSV() {
+  const sampleData = "student_id,name,email,department\nSTU001,John Doe,john@example.com,Computer Science\nSTU002,Jane Smith,jane@example.com,Cybersecurity\nSTU003,Alex Johnson,alex@example.com,Information Technology";
+  const blob = new Blob([sampleData], { type: 'text/csv;charset=utf-8;' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'students_sample_template.csv';
+  a.click();
+  toast('Sample CSV template downloaded!');
+}
+
+async function exportStudentsCSV() {
+  try {
+    const students = await api('/api/students');
+    if (!students || students.length === 0) return toast('No students to export', 'error');
+    const header = 'Student ID,Name,Email,Department,Created At\n';
+    const rows = students.map(s => `"${s.student_id}","${s.name}","${s.email || ''}","${s.department || ''}","${s.created_at}"`).join('\n');
+    const blob = new Blob([header + rows], { type: 'text/csv;charset=utf-8;' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `students_list_${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    toast('Students exported to CSV!');
+  } catch (err) { toast(err.message, 'error'); }
+}
+
 async function importCSV() {
+
   const raw = document.getElementById('csvData').value.trim();
   if (!raw) return toast('No data to import', 'error');
 
