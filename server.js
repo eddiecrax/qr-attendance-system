@@ -63,13 +63,17 @@ if (usePostgres) {
   dbDriver = 'postgres';
   console.log(`🔌 PostgreSQL mode enabled -> Host: ${pgConfig.host || 'URL'}, Database: ${pgConfig.database || 'default'}`);
 } else {
-  const Database = require('better-sqlite3');
-  const dataDir = path.join(__dirname, 'data');
-  if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir, { recursive: true });
-  sqliteDb = new Database(path.join(dataDir, 'attendance.db'));
-  sqliteDb.pragma('journal_mode = WAL');
-  sqliteDb.pragma('foreign_keys = ON');
-  console.log('📁 SQLite mode enabled -> data/attendance.db');
+  try {
+    const Database = require('better-sqlite3');
+    const dataDir = path.join(__dirname, 'data');
+    if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir, { recursive: true });
+    sqliteDb = new Database(path.join(dataDir, 'attendance.db'));
+    sqliteDb.pragma('journal_mode = WAL');
+    sqliteDb.pragma('foreign_keys = ON');
+    console.log('📁 SQLite mode enabled -> data/attendance.db');
+  } catch (err) {
+    console.warn('⚠️ SQLite driver (better-sqlite3) not loaded. Please set USE_POSTGRES=true for PostgreSQL mode.');
+  }
 }
 
 // Universal Async Query Helper
