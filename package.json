@@ -7,7 +7,8 @@
     "start": "node server.js",
     "dev": "node server.js",
     "tunnel": "./bin/cloudflared tunnel --url http://localhost:3000",
-    "prod": "npx pm2 start server.js --name qr-attendance"
+    "prod": "npx pm2 start server.js --name qr-attendance",
+    "deploy": "npx wrangler pages deploy public --project-name=qr-attendance-system"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
