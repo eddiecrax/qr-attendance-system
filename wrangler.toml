@@ -1,0 +1,4 @@
+name = "qr-attendance-system"
+main = "server.js"
+compatibility_date = "2026-09-04"
+compatibility_flags = [ "nodejs_compat" ]
