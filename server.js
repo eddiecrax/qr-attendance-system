@@ -216,16 +216,20 @@ async function initDb() {
     `);
   }
 
-  // Seed default admin account
+  // Seed / update default admin account
   const users = await query('SELECT id FROM users WHERE username = $1', ['admin']);
+  const hash = bcrypt.hashSync('admin12345', 10);
   if (!users || users.length === 0) {
-    const hash = bcrypt.hashSync('admin123', 10);
     await query(
       'INSERT INTO users (username, password, name, role) VALUES ($1, $2, $3, $4)',
       ['admin', hash, 'Administrator', 'admin']
     );
-    console.log('✅ Default admin created: admin / admin123');
+    console.log('✅ Admin account initialized: admin / admin12345');
+  } else {
+    await query('UPDATE users SET password = $1 WHERE username = $2', [hash, 'admin']);
+    console.log('✅ Admin password updated to: admin12345');
   }
+
 }
 
 // Initialize tables asynchronously
