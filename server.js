@@ -27,18 +27,26 @@ function getLocalIp() {
 }
 
 function getHostUrl(req) {
-  const proto = req.headers['x-forwarded-proto'] || req.protocol || 'http';
-  let host = req.headers['x-forwarded-host'] || req.get('host') || `localhost:${PORT}`;
+  try {
+    let proto = req.headers['x-forwarded-proto'] || req.protocol || 'https';
+    if (Array.isArray(proto)) proto = proto[0];
 
-  if (host.includes('localhost') || host.includes('127.0.0.1')) {
-    const ip = getLocalIp();
-    if (ip && ip !== 'localhost') {
-      const portPart = host.includes(':') ? `:${host.split(':')[1]}` : `:${PORT}`;
-      host = `${ip}${portPart}`;
+    let host = req.headers['x-forwarded-host'] || req.headers['host'] || `localhost:${PORT}`;
+    if (Array.isArray(host)) host = host[0];
+
+    if (host.includes('localhost') || host.includes('127.0.0.1')) {
+      const ip = getLocalIp();
+      if (ip && ip !== 'localhost') {
+        const portPart = host.includes(':') ? `:${host.split(':')[1]}` : `:${PORT}`;
+        host = `${ip}${portPart}`;
+      }
     }
+    return `${proto}://${host}`;
+  } catch (err) {
+    return 'https://' + (req.headers['host'] || 'localhost');
   }
-  return `${proto}://${host}`;
 }
+
 
 // ─── Database Setup (PostgreSQL / SQLite Dual Engine) ────────────
 let dbDriver = 'sqlite';
@@ -466,7 +474,8 @@ app.delete('/api/sessions/:id', auth, async (req, res) => {
 // ─── QR Code Routes ─────────────────────────────────────────────
 app.get('/api/sessions/:id/qr', auth, async (req, res) => {
   try {
-    const sessions = await query('SELECT * FROM sessions WHERE id = $1', [req.params.id]);
+    const sessId = parseInt(req.params.id, 10);
+    const sessions = await query('SELECT * FROM sessions WHERE id = $1', [sessId]);
     if (!sessions || sessions.length === 0) return res.status(404).json({ error: 'Session not found' });
     const session = sessions[0];
 
@@ -479,13 +488,15 @@ app.get('/api/sessions/:id/qr', auth, async (req, res) => {
     });
     res.json({ qr: qrDataUrl, url: scanUrl, token: session.qr_token, title: session.title });
   } catch (err) {
-    res.status(500).json({ error: 'Failed to generate QR code' });
+    console.error('QR Generation Error:', err);
+    res.status(500).json({ error: err.message || 'Failed to generate QR code' });
   }
 });
 
 app.get('/api/sessions/:id/qr.png', auth, async (req, res) => {
   try {
-    const sessions = await query('SELECT * FROM sessions WHERE id = $1', [req.params.id]);
+    const sessId = parseInt(req.params.id, 10);
+    const sessions = await query('SELECT * FROM sessions WHERE id = $1', [sessId]);
     if (!sessions || sessions.length === 0) return res.status(404).json({ error: 'Session not found' });
     const session = sessions[0];
 
@@ -493,10 +504,12 @@ app.get('/api/sessions/:id/qr.png', auth, async (req, res) => {
     res.setHeader('Content-Type', 'image/png');
     res.setHeader('Content-Disposition', `attachment; filename="qr-${session.title.replace(/[^a-z0-9]/gi, '_')}.png"`);
     await QRCode.toFileStream(res, scanUrl, { width: 800, margin: 3, errorCorrectionLevel: 'H' });
-  } catch {
-    res.status(500).json({ error: 'Failed to generate QR code' });
+  } catch (err) {
+    console.error('QR File Stream Error:', err);
+    res.status(500).json({ error: err.message || 'Failed to generate QR code' });
   }
 });
+
 
 // ─── Attendance Routes (Public) ─────────────────────────────────
 app.get('/api/sessions/verify/:token', async (req, res) => {
